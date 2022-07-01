@@ -121,21 +121,17 @@ function App() {
   }
 
   const STYLE_PLAYERS_ONLINE = {
-    height: "600px",
-    width: "150px",
-    backgroundColor: "white",
-    border: "2px solid black",
-    display: "flex",
+    height: "100vh",
+    width: "20vw",
+    paddingTop: "1rem",
+    backgroundColor: "#D4D4D4",
     justifyContent: "center",
     textAlign: "center"
   }
 
   const STYLE_BOARD = {
-    height: "600px",
-    width: "600px",
-    backgroundColor: "white",
-    border: "2px solid red",
-    position: "relative"
+    height: "100vh",
+    width: "80vw",
   }
 
   const STYLE_HEADER = {
@@ -155,11 +151,6 @@ function App() {
             status: "MOVE"
           }
           stompClient.current.send("/app/message", {}, JSON.stringify(player));
-            // setPlayer(prevState => ({
-            //   ...prevState, 
-            //   coordX: prevState.coordX <= 0 ? 0 : prevState.coordX - 1,
-            //   status: "MOVE"
-            // }))
             break;
           case "ArrowUp":
             setPlayer(prevState => ({
@@ -183,11 +174,7 @@ function App() {
   }
 
   return (
-    <div style={{display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center"}}>
-      <header style={STYLE_HEADER}>
-        <span style={{textAlign: "center"}}>Jogo RabbitMQ</span>
-      </header>
-      <div style={STYLE_MAIN}>
+    <div style={STYLE_MAIN}>
         <div style={STYLE_PLAYERS_ONLINE}>
           <div>
             {show ?
@@ -202,7 +189,6 @@ function App() {
           <Bullets playerList={playerList}/>
         </div>
       </div>
-    </div>
   )
 }
 
