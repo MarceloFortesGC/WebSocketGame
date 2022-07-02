@@ -1,0 +1,6 @@
+# Ignore artifacts:
+.prettierrc
+package.json
+package-lock.json
+readme.md
+vite.config.js
