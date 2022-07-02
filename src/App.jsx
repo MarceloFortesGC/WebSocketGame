@@ -116,8 +116,8 @@ function App() {
   }
 
   const STYLE_MAIN = {
-    height: 25,
-    width: 25,
+    height: "100%",
+    width: "100%",
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
