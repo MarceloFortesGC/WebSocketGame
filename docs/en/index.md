@@ -3,7 +3,7 @@
 The game consists in simply entering a multiplayer room, move around the screen and watch other players moving.
 
 ## Development goal
-The main goal on developing this game was to **** knowledge in websockets, messaging services and graylog.
+The main goal on developing this game was to reinforce our knowledge in websockets, messaging services and graylog.
 
 ## Authors
 
