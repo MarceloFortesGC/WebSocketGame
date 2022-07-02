@@ -4,6 +4,7 @@ O jogo consiste simplesmente em entrar na sala multiplayer, se mover pela tela e
 
 ## Objetivo de desenvolvimento
 O principal objetivo ao desenvolver esse jogo foi fixar o conhecimento em websockets, serviços de mensageria e graylog.
+
 ## Autores
 
 ### Padronização e estrutura de projeto
