@@ -1,9 +1,9 @@
-import React from 'react';
-
-const Bullets = ({ playerList }) => {
-  const style_bullet = (top, left, backgroundColor) => {
-    return {
-      position: 'absolute',
+import React from 'react'
+//Renderiza os player
+const Bullets = ({playerList}) => {
+  const style_bullet = (left, top, backgroundColor) => {
+    return ({
+      position: "absolute",
       top: top,
       left: left,
       width: '15px',
