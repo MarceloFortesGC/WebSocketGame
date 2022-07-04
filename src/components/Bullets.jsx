@@ -6,20 +6,26 @@ const Bullets = ({playerList}) => {
       position: "absolute",
       top: top,
       left: left,
-      width: "15px",
-      height: "15px",
+      width: '15px',
+      height: '15px',
       backgroundColor: backgroundColor,
-      borderRadius: "50%"
-  })}
+      borderRadius: '50%',
+    };
+  };
 
   return (
     <>
-      {playerList != undefined && playerList.map((player, index) => { 
-        return (
-          <div key={index} style={style_bullet(player.coordX, player.coordY, player.color)}></div>
-      )})}
+      {playerList != undefined &&
+        playerList.map((player, index) => {
+          return (
+            <div
+              key={index}
+              style={style_bullet(player.coordX, player.coordY, player.color)}
+            ></div>
+          );
+        })}
     </>
-  )
-}
+  );
+};
 
-export default Bullets
+export default Bullets;
