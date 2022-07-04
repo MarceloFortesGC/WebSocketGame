@@ -5,19 +5,55 @@ import PlayersOnline from './components/PlayersOnline';
 import SockJS from 'sockjs-client/dist/sockjs';
 
 function App() {
-  let player = {
-    nome: crypto.randomUUID,
-    coordX: getRndInteger(0, 300),
-    coordY: getRndInteger(300, 700),
+  //Parametros para min e max do limite que o player percorre a tela
+  //Esta estatico desta forma
+  let minX = 387;
+  let minY = 10;
+  let maxX = 1272; 
+  let maxY = 893;
+  
+  
+  const [player, setPlayer] = useState({
+    nome: crypto.randomUUID(),
+    coordX: getRndInteger(minX, maxX),
+    coordY: getRndInteger(minY, maxY),
     color: '#' + randomColor(),
     status: 'JOIN',
-  };
-
+  })
   const [playerList, _setPlayerList] = useState([]);
   const playerListRef = useRef(playerList);
+  
   const setPlayerList = (data) => {
-    playerListRef.current.push(data);
-    _setPlayerList((state) => [...new Set([...state, data])]);
+    
+    var existPlayer = playerListRef.current.some(o => o.nome == data.nome);
+    
+    //Se o player já existe ele da um update na lista de players
+    if (existPlayer == true){ 
+      _setPlayerList(current =>
+        current.map(obj => {
+          if (obj.nome == data.nome) {
+            return {
+              nome: data.nome, 
+              color: data.color, 
+              coordX: data.coordX, 
+              coordY: data.coordY, 
+              status: data.status
+            };
+          }
+          else{
+            return obj;
+          }
+        }),
+      );
+      var objIndex = playerList.findIndex((obj => obj.nome == data.nome));
+      playerList[objIndex].coordX = data.coordX;
+      playerList[objIndex].coordY = data.coordY;
+      playerList[objIndex].status = data.status;
+      console.log(playerList);
+    } else{ //Player Novo
+      playerListRef.current.push(data);
+      _setPlayerList((state) => [...new Set([...state, data])]);
+    }
   };
 
   const removePlayerList = (data) => {
@@ -29,14 +65,15 @@ function App() {
   const [show, setShow] = useState(true);
 
   const stompClient = useRef(null);
-
+  
+  //Loop que identifica enquanto a tecla estiver pressionada
   useEffect(() => {
     document.addEventListener('keydown', onMove);
     return () => document.removeEventListener('keydown', onMove);
   }, [playerList]);
 
   const connect = () => {
-    let Sock = new SockJS('http://localhost:8080/websocket-app');
+    let Sock = new SockJS('http://localhost:8090/websocket-app');
     stompClient.current = over(Sock);
     stompClient.current.connect({}, onConnected);
     setShow(false);
@@ -56,6 +93,7 @@ function App() {
     const offline = { ...temp.pop(), status: 'OFFLINE' };
     removePlayerList(offline);
     stompClient.current.send('/app/move', {}, JSON.stringify(offline));
+    setPlayer.nome = null;
     setShow(true);
   };
 
@@ -74,10 +112,18 @@ function App() {
     );
   };
 
+  //Subscribe do player
+  const sendPlayerPosition = (playerNome) => {
+    stompClient.current.subscribe('/topic/move', onShowMove);
+    stompClient.current.subscribe('/topic/position.' + playerNome , onShowMove);
+  };
+
+
   const userJoin = () => {
     stompClient.current.send('/app/move', {}, JSON.stringify(player));
   };
 
+  //Mostra a movimentação na tela
   const onShowMove = (payload) => {
     let payloadData = JSON.parse(payload.body);
     switch (payloadData.status) {
@@ -92,7 +138,7 @@ function App() {
         }
         break;
       case 'MOVE':
-        console.log(playerList);
+        setPlayerList(payloadData);
         break;
       case 'ONLINE':
         payloadData = {
@@ -119,13 +165,13 @@ function App() {
     height: "100%",
     width: "100%",
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: 'left',
     alignItems: 'center',
   };
 
   const STYLE_PLAYERS_ONLINE = {
     height: '98vh',
-    width: '20vw',
+    width: '384px',
     paddingTop: '1rem',
     backgroundColor: '#D4D4D4',
     justifyContent: 'center',
@@ -133,8 +179,9 @@ function App() {
   };
 
   const STYLE_BOARD = {
-    height: '100vh',
-    width: '80vw',
+    height: '900px',
+    width: '900px',
+    border: 'solid',
   };
 
   const STYLE_HEADER = {
@@ -144,52 +191,52 @@ function App() {
     alignItems: 'center',
     textAlign: 'center',
   };
-
+  //Funcao responsavel pelo calculo movimentacao atraves do reconhecimento da tecla pressionada
   function onMove(e) {
     switch (e.key) {
-      case 'ArrowLeft':
-        player = {
-          ...player,
-          coordX: player.coordX - 1,
-          status: 'MOVE',
-        };
-        stompClient.current.send('/app/message', {}, JSON.stringify(player));
+      case 'ArrowLeft': 
+        setPlayer({
+            nome: player.nome,
+            coordX: (player.coordX - 10) >= minX ? player.coordX - 10 : minX,
+            coordY: player.coordY,
+            color: player.color,  
+            status: 'MOVE',
+          });
+        stompClient.current.send('/app/position.' + player.nome, {}, JSON.stringify(player));
+        sendPlayerPosition();
         break;
       case 'ArrowUp':
-        // setPlayerList(prevState => ({
-        //   ...prevState,
-        //   coordY: prevState.coordY <= 0 ? 0 : prevState.coordY - 1
-        // }))
-        player = {
-          ...player,
-          coordY: player.coordY + 1,
+        setPlayer({
+          nome: player.nome,
+          coordX: player.coordX,
+          coordY: (player.coordY - 10) >= minY ? player.coordY - 10 : minY,
+          color: player.color,  
           status: 'MOVE',
-        };
-        stompClient.current.send('/app/message', {}, JSON.stringify(player));
+        });
+        stompClient.current.send('/app/position.' + player.nome, {}, JSON.stringify(player));
+        // sendPlayerPosition(player.nome);
         break;
       case 'ArrowRight':
-        // setPlayerList(prevState => ({
-        //   ...prevState,
-        //   coordX: prevState.coordX >= 585  ? 585  : prevState.coordX + 1
-        // }))
-        player = {
-          ...player,
-          coordX: player.coordX + 1,
+        setPlayer({
+          nome: player.nome,
+          coordX: (player.coordX + 10) <= maxX ? player.coordX + 10 : maxX,
+          coordY: player.coordY,
+          color: player.color,  
           status: 'MOVE',
-        };
-        stompClient.current.send('/app/message', {}, JSON.stringify(player));
+        });
+        stompClient.current.send('/app/position.' + player.nome, {}, JSON.stringify(player));
+        // sendPlayerPosition(player.nome);
         break;
       case 'ArrowDown':
-        // setPlayerList(prevState => ({
-        //   ...prevState,
-        //   coordY: prevState.coordY >= 585 ? 585 : prevState.coordY + 1
-        // }))
-        player = {
-          ...player,
-          coordY: player.coordY - 1,
+        setPlayer({
+          nome: player.nome,
+          coordX: player.coordX,
+          coordY: (player.coordY + 10) <= maxY ? player.coordY + 10 : maxY,
+          color: player.color,  
           status: 'MOVE',
-        };
-        stompClient.current.send('/app/message', {}, JSON.stringify(player));
+        });
+        stompClient.current.send('/app/position.' + player.nome, {}, JSON.stringify(player));
+        // sendPlayerPosition(player.nome);
         break;
     }
   }
@@ -207,7 +254,7 @@ function App() {
           <PlayersOnline playerList={playerList} />
         </div>
       </div>
-      <div style={STYLE_BOARD}>
+      <div id="divBoard" style={STYLE_BOARD}>
         <Bullets playerList={playerList} />
       </div>
     </div>

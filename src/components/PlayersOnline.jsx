@@ -1,5 +1,5 @@
 import React from 'react'
-
+//Lista os nomes dos Players online
 function PlayersOnline({playerList}) {
   return (
     <>
