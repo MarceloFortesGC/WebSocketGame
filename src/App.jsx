@@ -3,54 +3,52 @@ import { over } from 'stompjs';
 import Bullets from './components/Bullets';
 import PlayersOnline from './components/PlayersOnline';
 import SockJS from 'sockjs-client/dist/sockjs';
+import './App.css';
 
 function App() {
   //Parametros para min e max do limite que o player percorre a tela
   //Esta estatico desta forma
-  let minX = 387;
+
+  let minX = 10;
   let minY = 10;
-  let maxX = 1272; 
-  let maxY = 893;
-  
   
   const [player, setPlayer] = useState({
     nome: crypto.randomUUID(),
-    coordX: getRndInteger(minX, maxX),
-    coordY: getRndInteger(minY, maxY),
+    coordX: getRndInteger(0, window.innerWidth * 0.79),
+    coordY: getRndInteger(0, window.innerHeight * 0.98),
     color: '#' + randomColor(),
     status: 'JOIN',
-  })
+  });
   const [playerList, _setPlayerList] = useState([]);
   const playerListRef = useRef(playerList);
-  
+
   const setPlayerList = (data) => {
-    
-    var existPlayer = playerListRef.current.some(o => o.nome == data.nome);
-    
+    var existPlayer = playerListRef.current.some((o) => o.nome == data.nome);
+
     //Se o player já existe ele da um update na lista de players
-    if (existPlayer == true){ 
-      _setPlayerList(current =>
-        current.map(obj => {
+    if (existPlayer == true) {
+      _setPlayerList((current) =>
+        current.map((obj) => {
           if (obj.nome == data.nome) {
             return {
-              nome: data.nome, 
-              color: data.color, 
-              coordX: data.coordX, 
-              coordY: data.coordY, 
-              status: data.status
+              nome: data.nome,
+              color: data.color,
+              coordX: data.coordX,
+              coordY: data.coordY,
+              status: data.status,
             };
-          }
-          else{
+          } else {
             return obj;
           }
-        }),
+        })
       );
-      var objIndex = playerList.findIndex((obj => obj.nome == data.nome));
+      var objIndex = playerList.findIndex((obj) => obj.nome == data.nome);
       playerList[objIndex].coordX = data.coordX;
       playerList[objIndex].coordY = data.coordY;
       playerList[objIndex].status = data.status;
-      console.log(playerList);
-    } else{ //Player Novo
+    } else {
+      //Player Novo
+
       playerListRef.current.push(data);
       _setPlayerList((state) => [...new Set([...state, data])]);
     }
@@ -115,9 +113,9 @@ function App() {
   //Subscribe do player
   const sendPlayerPosition = (playerNome) => {
     stompClient.current.subscribe('/topic/move', onShowMove);
-    stompClient.current.subscribe('/topic/position.' + playerNome , onShowMove);
-  };
 
+    stompClient.current.subscribe('/topic/position.' + playerNome, onShowMove);
+  };
 
   const userJoin = () => {
     stompClient.current.send('/app/move', {}, JSON.stringify(player));
@@ -162,16 +160,17 @@ function App() {
   }
 
   const STYLE_MAIN = {
-    height: "100%",
-    width: "100%",
+    height: '100vh',
+    width: '100vw',
     display: 'flex',
     justifyContent: 'left',
     alignItems: 'center',
   };
 
   const STYLE_PLAYERS_ONLINE = {
-    height: '98vh',
-    width: '384px',
+
+    height: '100%',
+    width: '20%',
     paddingTop: '1rem',
     backgroundColor: '#D4D4D4',
     justifyContent: 'center',
@@ -179,8 +178,11 @@ function App() {
   };
 
   const STYLE_BOARD = {
-    height: '900px',
-    width: '900px',
+
+    position: 'relative',
+    height: '100%',
+    maxHeight: '100%',
+    width: '80%',
     border: 'solid',
   };
 
@@ -194,49 +196,62 @@ function App() {
   //Funcao responsavel pelo calculo movimentacao atraves do reconhecimento da tecla pressionada
   function onMove(e) {
     switch (e.key) {
-      case 'ArrowLeft': 
+      case 'ArrowLeft':
         setPlayer({
-            nome: player.nome,
-            coordX: (player.coordX - 10) >= minX ? player.coordX - 10 : minX,
-            coordY: player.coordY,
-            color: player.color,  
-            status: 'MOVE',
-          });
-        stompClient.current.send('/app/position.' + player.nome, {}, JSON.stringify(player));
+          nome: player.nome,
+          coordX:
+            player.coordX - minX < 0
+              ? window.innerWidth * 0.79
+              : player.coordX - minX,
+          coordY: player.coordY,
+          color: player.color,
+          status: 'MOVE',
+        });
+        stompClient.current.send('/topic/move', {}, JSON.stringify(player));
+
         sendPlayerPosition();
         break;
       case 'ArrowUp':
         setPlayer({
           nome: player.nome,
           coordX: player.coordX,
-          coordY: (player.coordY - 10) >= minY ? player.coordY - 10 : minY,
-          color: player.color,  
+
+          coordY:
+            player.coordY - minY < 0
+              ? window.innerHeight * 0.98
+              : player.coordY - minY,
+          color: player.color,
           status: 'MOVE',
         });
-        stompClient.current.send('/app/position.' + player.nome, {}, JSON.stringify(player));
-        // sendPlayerPosition(player.nome);
+        stompClient.current.send('/topic/move', {}, JSON.stringify(player));
         break;
       case 'ArrowRight':
         setPlayer({
           nome: player.nome,
-          coordX: (player.coordX + 10) <= maxX ? player.coordX + 10 : maxX,
+
+          coordX:
+            player.coordX + minX > (window.innerWidth * 79) / 100
+              ? 0
+              : player.coordX + minX,
           coordY: player.coordY,
-          color: player.color,  
+          color: player.color,
           status: 'MOVE',
         });
-        stompClient.current.send('/app/position.' + player.nome, {}, JSON.stringify(player));
-        // sendPlayerPosition(player.nome);
+        stompClient.current.send('/topic/move', {}, JSON.stringify(player));
         break;
       case 'ArrowDown':
         setPlayer({
           nome: player.nome,
           coordX: player.coordX,
-          coordY: (player.coordY + 10) <= maxY ? player.coordY + 10 : maxY,
-          color: player.color,  
+
+          coordY:
+            player.coordY + minY > (window.innerHeight * 98) / 100
+              ? 0
+              : player.coordY + minY,
+          color: player.color,
           status: 'MOVE',
         });
-        stompClient.current.send('/app/position.' + player.nome, {}, JSON.stringify(player));
-        // sendPlayerPosition(player.nome);
+        stompClient.current.send('/topic/move', {}, JSON.stringify(player));
         break;
     }
   }

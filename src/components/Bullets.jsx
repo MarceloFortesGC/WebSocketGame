@@ -10,7 +10,7 @@ const Bullets = ({playerList}) => {
       height: '15px',
       backgroundColor: backgroundColor,
       borderRadius: '50%',
-    };
+    });
   };
 
   return (
