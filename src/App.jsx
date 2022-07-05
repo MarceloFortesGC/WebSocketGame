@@ -8,9 +8,10 @@ import './App.css';
 function App() {
   //Parametros para min e max do limite que o player percorre a tela
   //Esta estatico desta forma
+
   let minX = 10;
   let minY = 10;
-
+  
   const [player, setPlayer] = useState({
     nome: crypto.randomUUID(),
     coordX: getRndInteger(0, window.innerWidth * 0.79),
@@ -47,6 +48,7 @@ function App() {
       playerList[objIndex].status = data.status;
     } else {
       //Player Novo
+
       playerListRef.current.push(data);
       _setPlayerList((state) => [...new Set([...state, data])]);
     }
@@ -61,14 +63,15 @@ function App() {
   const [show, setShow] = useState(true);
 
   const stompClient = useRef(null);
-
+  
+  //Loop que identifica enquanto a tecla estiver pressionada
   useEffect(() => {
     document.addEventListener('keydown', onMove);
     return () => document.removeEventListener('keydown', onMove);
   }, [playerList]);
 
   const connect = () => {
-    let Sock = new SockJS('http://localhost:8080/websocket-app');
+    let Sock = new SockJS('http://localhost:8090/websocket-app');
     stompClient.current = over(Sock);
     stompClient.current.connect({}, onConnected);
     setShow(false);
@@ -88,6 +91,7 @@ function App() {
     const offline = { ...temp.pop(), status: 'OFFLINE' };
     removePlayerList(offline);
     stompClient.current.send('/app/move', {}, JSON.stringify(offline));
+    setPlayer.nome = null;
     setShow(true);
   };
 
@@ -109,6 +113,7 @@ function App() {
   //Subscribe do player
   const sendPlayerPosition = (playerNome) => {
     stompClient.current.subscribe('/topic/move', onShowMove);
+
     stompClient.current.subscribe('/topic/position.' + playerNome, onShowMove);
   };
 
@@ -116,6 +121,7 @@ function App() {
     stompClient.current.send('/app/move', {}, JSON.stringify(player));
   };
 
+  //Mostra a movimentação na tela
   const onShowMove = (payload) => {
     let payloadData = JSON.parse(payload.body);
     switch (payloadData.status) {
@@ -130,7 +136,7 @@ function App() {
         }
         break;
       case 'MOVE':
-        console.log(playerList);
+        setPlayerList(payloadData);
         break;
       case 'ONLINE':
         payloadData = {
@@ -157,11 +163,12 @@ function App() {
     height: '100vh',
     width: '100vw',
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: 'left',
     alignItems: 'center',
   };
 
   const STYLE_PLAYERS_ONLINE = {
+
     height: '100%',
     width: '20%',
     paddingTop: '1rem',
@@ -171,6 +178,7 @@ function App() {
   };
 
   const STYLE_BOARD = {
+
     position: 'relative',
     height: '100%',
     maxHeight: '100%',
@@ -185,7 +193,7 @@ function App() {
     alignItems: 'center',
     textAlign: 'center',
   };
-
+  //Funcao responsavel pelo calculo movimentacao atraves do reconhecimento da tecla pressionada
   function onMove(e) {
     switch (e.key) {
       case 'ArrowLeft':
@@ -200,12 +208,14 @@ function App() {
           status: 'MOVE',
         });
         stompClient.current.send('/topic/move', {}, JSON.stringify(player));
+
         sendPlayerPosition();
         break;
       case 'ArrowUp':
         setPlayer({
           nome: player.nome,
           coordX: player.coordX,
+
           coordY:
             player.coordY - minY < 0
               ? window.innerHeight * 0.98
@@ -218,6 +228,7 @@ function App() {
       case 'ArrowRight':
         setPlayer({
           nome: player.nome,
+
           coordX:
             player.coordX + minX > (window.innerWidth * 79) / 100
               ? 0
@@ -232,6 +243,7 @@ function App() {
         setPlayer({
           nome: player.nome,
           coordX: player.coordX,
+
           coordY:
             player.coordY + minY > (window.innerHeight * 98) / 100
               ? 0
@@ -257,7 +269,7 @@ function App() {
           <PlayersOnline playerList={playerList} />
         </div>
       </div>
-      <div style={STYLE_BOARD}>
+      <div id="divBoard" style={STYLE_BOARD}>
         <Bullets playerList={playerList} />
       </div>
     </div>
