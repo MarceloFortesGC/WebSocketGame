@@ -8,14 +8,13 @@ import './App.css';
 function App() {
   //Parametros para min e max do limite que o player percorre a tela
   //Esta estatico desta forma
+  let minX = window.innerWidth * 0.0008;
+  let minY = window.innerHeight * 0.0008;
 
-  let minX = 10;
-  let minY = 10;
-  
   const [player, setPlayer] = useState({
     nome: crypto.randomUUID(),
-    coordX: getRndInteger(0, window.innerWidth * 0.79),
-    coordY: getRndInteger(0, window.innerHeight * 0.98),
+    coordX: getRndInteger(2, 95),
+    coordY: getRndInteger(2, 95),
     color: '#' + randomColor(),
     status: 'JOIN',
   });
@@ -48,7 +47,6 @@ function App() {
       playerList[objIndex].status = data.status;
     } else {
       //Player Novo
-
       playerListRef.current.push(data);
       _setPlayerList((state) => [...new Set([...state, data])]);
     }
@@ -63,15 +61,15 @@ function App() {
   const [show, setShow] = useState(true);
 
   const stompClient = useRef(null);
-  
-  //Loop que identifica enquanto a tecla estiver pressionada
+
+//Loop que identifica enquanto a tecla estiver pressionada
   useEffect(() => {
     document.addEventListener('keydown', onMove);
     return () => document.removeEventListener('keydown', onMove);
   }, [playerList]);
 
   const connect = () => {
-    let Sock = new SockJS('http://localhost:8090/websocket-app');
+    let Sock = new SockJS('http://localhost:8080/websocket-app');
     stompClient.current = over(Sock);
     stompClient.current.connect({}, onConnected);
     setShow(false);
@@ -113,7 +111,6 @@ function App() {
   //Subscribe do player
   const sendPlayerPosition = (playerNome) => {
     stompClient.current.subscribe('/topic/move', onShowMove);
-
     stompClient.current.subscribe('/topic/position.' + playerNome, onShowMove);
   };
 
@@ -163,12 +160,11 @@ function App() {
     height: '100vh',
     width: '100vw',
     display: 'flex',
-    justifyContent: 'left',
+    justifyContent: 'center',
     alignItems: 'center',
   };
 
   const STYLE_PLAYERS_ONLINE = {
-
     height: '100%',
     width: '20%',
     paddingTop: '1rem',
@@ -178,11 +174,10 @@ function App() {
   };
 
   const STYLE_BOARD = {
-
     position: 'relative',
-    height: '100%',
-    maxHeight: '100%',
-    width: '80%',
+    height: 'min(100vw, 100vh)',
+    // maxHeight: '100%',
+    width: 'min(100vw, 100vh)',
     border: 'solid',
   };
 
@@ -193,32 +188,29 @@ function App() {
     alignItems: 'center',
     textAlign: 'center',
   };
+
   //Funcao responsavel pelo calculo movimentacao atraves do reconhecimento da tecla pressionada
   function onMove(e) {
     switch (e.key) {
       case 'ArrowLeft':
         setPlayer({
           nome: player.nome,
-          coordX:
-            player.coordX - minX < 0
-              ? window.innerWidth * 0.79
-              : player.coordX - minX,
+          coordX: player.coordX - minX < 0
+          ? 100 - ((window.innerHeight*0.012 + window.innerWidth*0.012)*100/window.innerWidth)
+          : player.coordX - minX,
           coordY: player.coordY,
           color: player.color,
           status: 'MOVE',
         });
         stompClient.current.send('/topic/move', {}, JSON.stringify(player));
-
-        sendPlayerPosition();
         break;
       case 'ArrowUp':
         setPlayer({
           nome: player.nome,
           coordX: player.coordX,
-
           coordY:
             player.coordY - minY < 0
-              ? window.innerHeight * 0.98
+              ? 100 - ((window.innerHeight*0.012 + window.innerWidth*0.012)*100/window.innerHeight)
               : player.coordY - minY,
           color: player.color,
           status: 'MOVE',
@@ -228,9 +220,8 @@ function App() {
       case 'ArrowRight':
         setPlayer({
           nome: player.nome,
-
           coordX:
-            player.coordX + minX > (window.innerWidth * 79) / 100
+            player.coordX + minX > 100 - ((window.innerHeight*0.012 + window.innerWidth*0.012)*100/window.innerWidth)
               ? 0
               : player.coordX + minX,
           coordY: player.coordY,
@@ -243,9 +234,8 @@ function App() {
         setPlayer({
           nome: player.nome,
           coordX: player.coordX,
-
           coordY:
-            player.coordY + minY > (window.innerHeight * 98) / 100
+            player.coordY + minY > 100 - ((window.innerHeight*0.0133 + window.innerWidth*0.0133)*100/window.innerHeight)
               ? 0
               : player.coordY + minY,
           color: player.color,
@@ -257,8 +247,8 @@ function App() {
   }
 
   return (
-    <div style={STYLE_MAIN}>
-      <div style={STYLE_PLAYERS_ONLINE}>
+    <div style={STYLE_MAIN} className="container">
+      <div style={STYLE_PLAYERS_ONLINE} className="wrapper players">
         <div>
           {show ? (
             <button onClick={() => connect()}>Entrar</button>
@@ -269,7 +259,7 @@ function App() {
           <PlayersOnline playerList={playerList} />
         </div>
       </div>
-      <div id="divBoard" style={STYLE_BOARD}>
+      <div style={STYLE_BOARD} className="wrapper">
         <Bullets playerList={playerList} />
       </div>
     </div>
