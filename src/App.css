@@ -11,3 +11,19 @@ body {
     max-height: 100vh;
     overflow: hidden;
 }
+
+@media (max-width: 600px) {
+
+    .container {
+        flex-direction: column-reverse;
+    }
+
+    .wrapper {
+        width: 100% !important;
+    }
+
+    .players {
+        flex: 1;
+        overflow-y: auto;
+    }
+}
