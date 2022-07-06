@@ -8,8 +8,12 @@ import './App.css';
 function App() {
   //Parametros para min e max do limite que o player percorre a tela
   //Esta estatico desta forma
-  let minX = window.innerWidth * 0.0008;
-  let minY = window.innerHeight * 0.0008;
+  function getMinor() {
+    const min = window.innerWidth - window.innerHeight;
+    return min >= 0 ? window.innerHeight : window.innerWidth;
+  }
+  let minX = getMinor() * 0.0008;
+  let minY = getMinor() * 0.0008;
 
   const [player, setPlayer] = useState({
     nome: crypto.randomUUID(),
@@ -20,6 +24,7 @@ function App() {
   });
   const [playerList, _setPlayerList] = useState([]);
   const playerListRef = useRef(playerList);
+  const [connected, setConnected] = useState('DISCONNECTED');
 
   const setPlayerList = (data) => {
     var existPlayer = playerListRef.current.some((o) => o.nome == data.nome);
@@ -52,41 +57,52 @@ function App() {
     }
   };
 
+  // Remove o player da lista
   const removePlayerList = (data) => {
-    const players = playerList.filter(item => item.nome !== data.nome)
-    _setPlayerList(players)
+    const players = playerList.filter((item) => item.nome !== data.nome);
+    _setPlayerList(players);
+    playerListRef.current.forEach((item, index) => {
+      if (item.nome === data.nome) {
+        playerListRef.current.splice(index, index + 1);
+      }
+    });
   };
 
   const [show, setShow] = useState(true);
 
   const stompClient = useRef(null);
 
-//Loop que identifica enquanto a tecla estiver pressionada
+  //Loop que identifica enquanto a tecla estiver pressionada
   useEffect(() => {
     document.addEventListener('keydown', onMove);
     return () => document.removeEventListener('keydown', onMove);
   }, [playerList]);
 
   const connect = () => {
-      let Sock = new SockJS('http://localhost:8080/websocket-app');
+    if (connected === 'DISCONNECTED') {
+      let Sock = new SockJS('http://192.168.0.104:8080/websocket-app');
       stompClient.current = over(Sock);
-      stompClient.current.connect({}, onConnected);
-      // setPlayer.nome = crypto.randomUUID()
+      setConnected('CONNECTED');
       setShow(false);
+    } else if (connected === 'PAUSED') {
+      const p = { ...player, status: 'JOIN' };
+      setPlayer(p);
+      userJoin();
+      setConnected('CONNECTED');
+      setShow(false);
+    }
+    stompClient.current.connect({}, onConnected);
   };
 
   const disconnect = () => {
-    let disconnectedPlayer = playerList.filter(item => item.nome === player.nome)
-    disconnectedPlayer[0].status = "OFFLINE"
-    const obj = disconnectedPlayer[0]
+    let disconnectedPlayer = playerList.filter(
+      (item) => item.nome === player.nome
+    );
+    disconnectedPlayer[0].status = 'OFFLINE';
+    const obj = disconnectedPlayer[0];
     stompClient.current.send('/app/move', {}, JSON.stringify(obj));
     setShow(true);
-    let resetPlayer = player
-    resetPlayer.nome = null
-    setPlayer(resetPlayer)
-    setTimeout(()=>{
-      stompClient.current.disconnect({}, onDisconnected)
-    }, 2000)
+    setConnected('PAUSED');
   };
 
   const onDisconnected = () => {
@@ -192,58 +208,75 @@ function App() {
 
   //Funcao responsavel pelo calculo movimentacao atraves do reconhecimento da tecla pressionada
   function onMove(e) {
-    switch (e.key) {
-      case 'ArrowLeft':
-        setPlayer({
-          nome: player.nome,
-          coordX: player.coordX - minX < 0
-          ? 100 - ((window.innerHeight*0.012 + window.innerWidth*0.012)*100/window.innerWidth)
-          : player.coordX - minX,
-          coordY: player.coordY,
-          color: player.color,
-          status: 'MOVE',
-        });
-        stompClient.current.send('/topic/move', {}, JSON.stringify(player));
-        break;
-      case 'ArrowUp':
-        setPlayer({
-          nome: player.nome,
-          coordX: player.coordX,
-          coordY:
-            player.coordY - minY < 0
-              ? 100 - ((window.innerHeight*0.012 + window.innerWidth*0.012)*100/window.innerHeight)
-              : player.coordY - minY,
-          color: player.color,
-          status: 'MOVE',
-        });
-        stompClient.current.send('/topic/move', {}, JSON.stringify(player));
-        break;
-      case 'ArrowRight':
-        setPlayer({
-          nome: player.nome,
-          coordX:
-            player.coordX + minX > 100 - ((window.innerHeight*0.012 + window.innerWidth*0.012)*100/window.innerWidth)
-              ? 0
-              : player.coordX + minX,
-          coordY: player.coordY,
-          color: player.color,
-          status: 'MOVE',
-        });
-        stompClient.current.send('/topic/move', {}, JSON.stringify(player));
-        break;
-      case 'ArrowDown':
-        setPlayer({
-          nome: player.nome,
-          coordX: player.coordX,
-          coordY:
-            player.coordY + minY > 100 - ((window.innerHeight*0.0133 + window.innerWidth*0.0133)*100/window.innerHeight)
-              ? 0
-              : player.coordY + minY,
-          color: player.color,
-          status: 'MOVE',
-        });
-        stompClient.current.send('/topic/move', {}, JSON.stringify(player));
-        break;
+    if (connected === 'CONNECTED') {
+      switch (e.key) {
+        case 'ArrowLeft':
+          setPlayer({
+            nome: player.nome,
+            coordX:
+              player.coordX - minX < 0
+                ? 100 -
+                  ((window.innerHeight * 0.012 + window.innerWidth * 0.012) *
+                    100) /
+                    window.innerWidth
+                : player.coordX - minX,
+            coordY: player.coordY,
+            color: player.color,
+            status: 'MOVE',
+          });
+          stompClient.current.send('/topic/move', {}, JSON.stringify(player));
+          break;
+        case 'ArrowUp':
+          setPlayer({
+            nome: player.nome,
+            coordX: player.coordX,
+            coordY:
+              player.coordY - minY < 0
+                ? 100 -
+                  ((window.innerHeight * 0.012 + window.innerWidth * 0.012) *
+                    100) /
+                    window.innerHeight
+                : player.coordY - minY,
+            color: player.color,
+            status: 'MOVE',
+          });
+          stompClient.current.send('/topic/move', {}, JSON.stringify(player));
+          break;
+        case 'ArrowRight':
+          setPlayer({
+            nome: player.nome,
+            coordX:
+              player.coordX + minX >
+              100 -
+                ((window.innerHeight * 0.012 + window.innerWidth * 0.012) *
+                  100) /
+                  window.innerWidth
+                ? 0
+                : player.coordX + minX,
+            coordY: player.coordY,
+            color: player.color,
+            status: 'MOVE',
+          });
+          stompClient.current.send('/topic/move', {}, JSON.stringify(player));
+          break;
+        case 'ArrowDown':
+          setPlayer({
+            nome: player.nome,
+            coordX: player.coordX,
+            coordY:
+              player.coordY + minY >
+              100 -
+                ((window.innerHeight * 0.0133 + window.innerWidth * 0.0133) *
+                  100) /
+                  window.innerHeight
+                ? 0
+                : player.coordY + minY,
+            color: player.color,
+            status: 'MOVE',
+          });
+          stompClient.current.send('/topic/move', {}, JSON.stringify(player));
+          break;
+      }
     }
   }
 
