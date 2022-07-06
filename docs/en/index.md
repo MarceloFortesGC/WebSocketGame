@@ -1,11 +1,34 @@
-# Online game
+# About
 
 The game consists in simply entering a multiplayer room, move around the screen and watch other players moving.
 
 ## Development goal
 The main goal on developing this game was to reinforce our knowledge in websockets, messaging services and graylog.
 
+## Technologies
+
+- Docker
+- Java
+- MongoDB
+- ReactJS
+
+## Dependencies
+
+### Standardization
+- Husky
+- Prettier
+
+### Conection
+- Net
+- React Stomp
+- SockJS
+- StompJS
+- Vite
+
 ## Authors
+
+### Original code
+- [Alexandre Zanlorenzi](https://github.com/Duim86)
 
 ### Project standardization and structure
 - [Aline Zsigmond](https://www.github.com/alinezsigmond)
