@@ -1,6 +1,6 @@
 # About
 
-The game consists in simply entering a multiplayer room, move around the screen and watch other players moving.
+The game consists in simply entering a multiplayer room, moving around the screen and watching other players move.
 
 ## Development goal
 The main goal on developing this game was to reinforce our knowledge in websockets, messaging services and graylog.
@@ -18,7 +18,7 @@ The main goal on developing this game was to reinforce our knowledge in websocke
 - Husky
 - Prettier
 
-### Conection
+### Connection
 - Net
 - React Stomp
 - SockJS
