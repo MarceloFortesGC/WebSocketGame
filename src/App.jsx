@@ -53,9 +53,8 @@ function App() {
   };
 
   const removePlayerList = (data) => {
-    playerListRef.current.filter((item) => item.nome != data.nome);
-    const temp = [...playerList].filter((item) => item.nome != data.nome);
-    _setPlayerList(temp);
+    const players = playerList.filter(item => item.nome !== data.nome)
+    _setPlayerList(players)
   };
 
   const [show, setShow] = useState(true);
@@ -69,26 +68,28 @@ function App() {
   }, [playerList]);
 
   const connect = () => {
-    let Sock = new SockJS('http://localhost:8080/websocket-app');
-    stompClient.current = over(Sock);
-    stompClient.current.connect({}, onConnected);
-    setShow(false);
+      let Sock = new SockJS('http://localhost:8080/websocket-app');
+      stompClient.current = over(Sock);
+      stompClient.current.connect({}, onConnected);
+      // setPlayer.nome = crypto.randomUUID()
+      setShow(false);
   };
 
   const disconnect = () => {
-    stompClient.current.disconnect({}, onDisconnected);
-    const temp = [...playerList];
-    const offline = { ...temp.pop(), status: 'OFFLINE' };
-    removePlayerList(offline);
-    stompClient.current.send('/app/move', {}, JSON.stringify(offline));
+    let disconnectedPlayer = playerList.filter(item => item.nome === player.nome)
+    disconnectedPlayer[0].status = "OFFLINE"
+    const obj = disconnectedPlayer[0]
+    stompClient.current.send('/app/move', {}, JSON.stringify(obj));
     setShow(true);
+    let resetPlayer = player
+    resetPlayer.nome = null
+    setPlayer(resetPlayer)
+    setTimeout(()=>{
+      stompClient.current.disconnect({}, onDisconnected)
+    }, 2000)
   };
 
   const onDisconnected = () => {
-    const temp = [...playerList];
-    const offline = { ...temp.pop(), status: 'OFFLINE' };
-    removePlayerList(offline);
-    stompClient.current.send('/app/move', {}, JSON.stringify(offline));
     setPlayer.nome = null;
     setShow(true);
   };
