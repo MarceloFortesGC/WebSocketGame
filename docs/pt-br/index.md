@@ -1,11 +1,34 @@
-# Jogo online
+# Sobre
 
 O jogo consiste simplesmente em entrar na sala multiplayer, se mover pela tela e observar outros jogadores se movendo.
 
 ## Objetivo de desenvolvimento
 O principal objetivo ao desenvolver esse jogo foi fixar o conhecimento em websockets, serviços de mensageria e graylog.
 
+## Tecnologias
+
+- Docker
+- Java
+- MongoDB
+- ReactJS
+
+## Dependencias
+
+### Padronização
+- Husky
+- Prettier
+
+### Conexão
+- Net
+- React Stomp
+- SockJS
+- StompJS
+- Vite
+
 ## Autores
+
+### Código original
+- [Alexandre Zanlorenzi](https://github.com/Duim86)
 
 ### Padronização e estrutura de projeto
 - [Aline Zsigmond](https://www.github.com/alinezsigmond)
