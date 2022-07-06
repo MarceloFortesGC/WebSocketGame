@@ -6,8 +6,8 @@ const Bullets = ({ playerList }) => {
       position: 'absolute',
       top: `${top}%`,
       left: `${left}%`,
-      width: 'min(3.5vw, 17px)',
-      height: 'min(3.5vw, 17px)',
+      width: 'min(min(3.5vw, 3.5vh), 17px)',
+      height: 'min(min(3.5vw, 3.5vh), 17px)',
       backgroundColor: backgroundColor,
       borderRadius: '50%',
     }
