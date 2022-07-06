@@ -80,7 +80,7 @@ function App() {
 
   const connect = () => {
     if (connected === 'DISCONNECTED') {
-      let Sock = new SockJS('http://192.168.0.104:8080/websocket-app');
+      let Sock = new SockJS('http://localhost:8080/websocket-app');
       stompClient.current = over(Sock);
       setConnected('CONNECTED');
       setShow(false);
@@ -104,6 +104,22 @@ function App() {
     setShow(true);
     setConnected('PAUSED');
   };
+
+  useEffect(() => {
+    const handleTabClose = event => {
+      event.preventDefault();
+
+      console.log(event);
+
+      return (event.returnValue = 'Are you sure you want to exit?');
+    };
+
+    window.addEventListener('beforeunload', disconnect);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleTabClose);
+    };
+  }, []);
 
   const onDisconnected = () => {
     setPlayer.nome = null;
