@@ -105,11 +105,10 @@ function App() {
     setConnected('PAUSED');
   };
 
+  // Desconecta o player ao fechar a janela
   useEffect(() => {
     const handleTabClose = event => {
       event.preventDefault();
-
-      console.log(event);
 
       return (event.returnValue = 'Are you sure you want to exit?');
     };
